@@ -33,8 +33,9 @@ env_rs = raster::stack(bioclim_files)
 
 # Example Dataframe - Replace W/ Your Own
 spp = data.frame(
-  Scientific.Name = "Adelges tsugae",
-  Source.Location = "Japan"
+  # Scientific.Name = "Adelges tsugae",
+  Scientific.Name = "Unomia stolonifera",
+  Source.Location = "Venezuela"
 )
 
 # Convert Country --> Country Code
