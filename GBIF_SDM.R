@@ -21,11 +21,11 @@ source(here::here("~/Automated-GBIF-Species-Distribution-Modeling/GBIF_SDM_Funct
 
 # ---- 2: Download BioClim Data ----
 
-bioclim_download(resolution = 5) # Adjust resolution as needed
+bioclim_download(resolution = 2.5) # Adjust resolution as needed
 
 # ---- 3: Batch Read BioClim Folder Data ----
 
-bioclim_dir = here::here("data2", "climate", "wc2.1_5m") # Adjust version & resolution path accordingly
+bioclim_dir = here::here("data2", "climate", "wc2.1_2.5m") # Adjust version & resolution path accordingly
 bioclim_files = list.files(path = bioclim_dir, pattern = "\\.tif$", full.names = TRUE)
 
 bioclim_dir = here::here("data2", "climate", "biooracle") # Adjust version & resolution path accordingly
@@ -33,6 +33,10 @@ bioclim_files = list.files(path = bioclim_dir, pattern = "\\.nc$", full.names = 
 
 # Convert to RasterStack for dismo::maxent()
 env_rs = raster::stack(bioclim_files)
+env_rs <- crop(env_rs, extent(-180, 180, -60, 60))
+bathy = raster("~/data2/ETOPO_2022_v1_15s_3f38_8816_d630.nc")
+bathy[bathy <= -30] <- NA
+bathy[bathy >= 0] <- NA  
 
 # ---- 4: Load Species Dataframe & Convert Countries ----
 

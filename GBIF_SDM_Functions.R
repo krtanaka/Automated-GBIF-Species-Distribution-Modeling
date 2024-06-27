@@ -21,8 +21,8 @@ gbif_occ_data = function(scientific_name, countries) {
   country_codes = paste(unique(unlist(strsplit(countries, ";"))), collapse = ";")
   
   sp = occ_data(scientificName = scientific_name, 
-                 country = country_codes,
-                 limit = 100000) # Need to set limit or it defaults to 500
+                country = country_codes,
+                limit = 100000) # Need to set limit or it defaults to 500
   
   sp_df = data.frame(sp$data)
   
@@ -57,11 +57,12 @@ run_maxent = function(occ_sf, env) {
     
     # Run ENMevaluate
     enmeval_results = ENMevaluate(occ_sp, env, 
-                                   bg = NULL, 
-                                   tune.args = list(fc = c("L","LQ","H", "LQH", "LQHP", "LQHPT"), rm = 1:5), 
-                                   partitions = "randomkfold", partition.settings = list(kfolds = 2), 
-                                   algorithm = "maxnet", 
-                                   taxon.name = sp)  # specify the taxon name here
+                                  bg = NULL, 
+                                  tune.args = list(fc = c("L","LQ","H", "LQH", "LQHP", "LQHPT"), rm = 1:5), 
+                                  partitions = "randomkfold", partition.settings = list(kfolds = 2), 
+                                  algorithm = "maxnet", 
+                                  n.bg = 100,
+                                  taxon.name = sp)  # specify the taxon name here
     
     enmeval_df = enmeval_results@results
     
@@ -105,11 +106,11 @@ region_to_country = function(location_string, mapping) {
 flexible_country_code = function(location_string) {
   # List of common two-word countries
   two_word_countries = c("Antigua and Barbuda", "Bosnia and Herzegovina", "Central African Republic", 
-                          "Costa Rica", "Czech Republic", "Dominican Republic", "Timor-Leste", "El Salvador",
-                          "Equatorial Guinea", "Marshall Islands", "New Zealand", "North Korea", 
-                          "Papua New Guinea", "San Marino", "Sao Tome and Principe", "Sierra Leone", 
-                          "Saudi Arabia", "Solomon Islands", "South Korea", "Sri Lanka", 
-                          "Trinidad and Tobago", "United Arab Emirates", "United Kingdom", "United States")
+                         "Costa Rica", "Czech Republic", "Dominican Republic", "Timor-Leste", "El Salvador",
+                         "Equatorial Guinea", "Marshall Islands", "New Zealand", "North Korea", 
+                         "Papua New Guinea", "San Marino", "Sao Tome and Principe", "Sierra Leone", 
+                         "Saudi Arabia", "Solomon Islands", "South Korea", "Sri Lanka", 
+                         "Trinidad and Tobago", "United Arab Emirates", "United Kingdom", "United States")
   
   # Match two-word countries and store their codes
   matched_two_word_codes = sapply(two_word_countries, function(country) {
