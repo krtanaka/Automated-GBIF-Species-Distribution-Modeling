@@ -11,6 +11,8 @@ require(rJava)
 require(dismo)
 require(countrycode)
 
+rm(list = ls())
+
 setwd("~/Automated-GBIF-Species-Distribution-Modeling/")
 
 # ---- 1: Load Script Functions ----
@@ -19,12 +21,15 @@ source(here::here("~/Automated-GBIF-Species-Distribution-Modeling/GBIF_SDM_Funct
 
 # ---- 2: Download BioClim Data ----
 
-bioclim_download(resolution = 10)                 # Adjust resolution as needed
+bioclim_download(resolution = 5) # Adjust resolution as needed
 
 # ---- 3: Batch Read BioClim Folder Data ----
 
-bioclim_dir = here::here("data2", "climate", "wc2.1_10m")    # Adjust version & resolution path accordingly
+bioclim_dir = here::here("data2", "climate", "wc2.1_5m") # Adjust version & resolution path accordingly
 bioclim_files = list.files(path = bioclim_dir, pattern = "\\.tif$", full.names = TRUE)
+
+bioclim_dir = here::here("data2", "climate", "biooracle") # Adjust version & resolution path accordingly
+bioclim_files = list.files(path = bioclim_dir, pattern = "\\.nc$", full.names = TRUE)
 
 # Convert to RasterStack for dismo::maxent()
 env_rs = raster::stack(bioclim_files)
@@ -35,7 +40,7 @@ env_rs = raster::stack(bioclim_files)
 spp = data.frame(
   # Scientific.Name = "Adelges tsugae",
   Scientific.Name = "Unomia stolonifera",
-  Source.Location = "Venezuela"
+  Source.Location = c("Venezuela", "Cuba", "Philippines", "Indonesia", "Chinese Taipei")
 )
 
 # Convert Country --> Country Code
@@ -51,8 +56,10 @@ spp$Source.Location = sapply(spp$Source.Location, region_to_country, mapping = r
 
 # Apply the function to each scientific name in the dataframe
 occ_list = setNames(mapply(gbif_occ_data, 
-                           spp$Scientific.Name, spp$countryCode, 
-                           SIMPLIFY = FALSE), spp$Scientific.Name)
+                           spp$Scientific.Name, 
+                           spp$countryCode, 
+                           SIMPLIFY = FALSE), 
+                    spp$Scientific.Name)
 
 # Convert the list to a data frame, and also create a new column to hold the Scientific.Name
 occ_df = bind_rows(occ_list, .id = "Scientific.Name")
@@ -76,6 +83,7 @@ worldbound = st_read(here::here('data2', 'world-administrative-boundaries', 'wor
 
 # Batch clip prediction extents
 clipped_rasters_list <- spp_clip_raster(spp, worldbound, env_rs)
+clipped_rasters_list <- spp_clip_raster_island(spp, worldbound, env_rs, "Oahu")
 
 # Create the "MaxEnt_Predictions" directory to store results
 dir.create("MaxEnt_Target_Predictions", showWarnings = FALSE)

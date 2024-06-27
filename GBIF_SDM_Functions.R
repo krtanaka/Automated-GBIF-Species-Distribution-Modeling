@@ -181,6 +181,50 @@ spp_clip_raster <- function(spp, worldbound, env_rs) {
   return(clipped_rasters)
 }
 
+spp_clip_raster_island <- function(spp, worldbound, env_rs, island) {
+  
+  boxes = read_csv("Bounding_Boxes.csv")
+  
+  # Ensure the worldbound is in the same CRS as env_rs
+  worldbound <- st_transform(worldbound, crs = crs(env_rs))
+  
+  # Convert the string of country codes in spp dataframe to a list
+  spp <- spp %>%
+    mutate(country_list = str_split(countryCode, ";"))
+  
+  # Initialize an empty list to store the clipped rasters
+  clipped_rasters <- list()
+  
+  # Iterate over each unique Scientific.Name
+  for (sci_name in unique(spp$Scientific.Name)) {
+    
+    # island = "Oahu"
+    
+    # Extract the country codes associated with the current Scientific.Name
+    island_box <- boxes %>%
+      filter(unit == island)
+    
+    # Subset the worldbound based on the country codes
+    subset_polygons <- worldbound %>%
+      filter(iso_3166_1_ %in% "USA")
+    
+    # Union the subsetted polygons to get a single polygon in an sf object
+    combined_polygon <- st_union(subset_polygons) %>%
+      st_sf()
+    
+    # Define the extent from island_boxes
+    extent_island <- extent(island_box$x_min, island_box$x_max, island_box$y_min, island_box$y_max)
+    
+    # Clip env_rs using the defined extent
+    clipped_raster <- crop(env_rs, extent_island)
+    
+    # Store the clipped raster in the list
+    clipped_rasters[[sci_name]] <- clipped_raster
+  }
+  
+  return(clipped_rasters)
+}
+
 # ---- Predict MaxEnt Models ----
 
 maxent_predict <- function() {
