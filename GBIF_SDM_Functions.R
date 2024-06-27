@@ -61,7 +61,7 @@ run_maxent = function(occ_sf, env) {
                                   tune.args = list(fc = c("L","LQ","H", "LQH", "LQHP", "LQHPT"), rm = 1:5), 
                                   partitions = "randomkfold", partition.settings = list(kfolds = 2), 
                                   algorithm = "maxnet", 
-                                  n.bg = 100,
+                                  # n.bg = 100,
                                   taxon.name = sp)  # specify the taxon name here
     
     enmeval_df = enmeval_results@results
