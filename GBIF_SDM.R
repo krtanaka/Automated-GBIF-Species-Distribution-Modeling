@@ -37,6 +37,15 @@ env_rs <- crop(env_rs, extent(-180, 180, -60, 60))
 bathy = raster("~/data2/ETOPO_2022_v1_15s_3f38_8816_d630.nc")
 bathy[bathy <= -30] <- NA
 bathy[bathy >= 0] <- NA  
+bathy = readAll(bathy)
+save(bathy, file = "~/Automated-GBIF-Species-Distribution-Modeling/data2/etopo_0-30.rdata")
+load("~/Automated-GBIF-Species-Distribution-Modeling/data2/etopo_0-30.rdata")
+env_rs <- crop(env_rs, extent(bathy))
+env_rs <- resample(env_rs, bathy)
+env_rs <- mask(env_rs, bathy)
+
+# Optionally, save the clipped raster
+writeRaster(clipped_env_rs, "clipped_env_rs.grd", overwrite = TRUE)
 
 # ---- 4: Load Species Dataframe & Convert Countries ----
 
