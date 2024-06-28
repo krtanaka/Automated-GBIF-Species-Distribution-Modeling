@@ -13,9 +13,6 @@ require(countrycode)
 
 rm(list = ls())
 
-setwd("~/Automated-GBIF-Species-Distribution-Modeling/")
-setwd("C:/Users/kisei.tanaka/Automated-GBIF-Species-Distribution-Modeling")
-
 # ---- 1: Load Script Functions ----
 
 source("GBIF_SDM_Functions.R")        # REPLACE W/ YOUR PATH TO GBIF_SDM_Functions.R
@@ -56,22 +53,22 @@ env_rs <- mask(env_rs, bathy)
 save(env_rs, file = "~/Automated-GBIF-Species-Distribution-Modeling/data2/env_rs.rdata")
 load("~/Automated-GBIF-Species-Distribution-Modeling/data2/env_rs.rdata")
 
-# Optionally, save the clipped raster
-writeRaster(clipped_env_rs, "clipped_env_rs.grd", overwrite = TRUE)
-
 # ---- 4: Load Species Dataframe & Convert Countries ----
 
 # Example Dataframe - Replace W/ Your Own
 spp = data.frame(
   # Scientific.Name = "Adelges tsugae",
   Scientific.Name = "Unomia stolonifera",
+  Scientific.Name = "Herklotsichthys quadrimaculatus",
   Source.Location = c("Venezuela", "Cuba", "Philippines", "Indonesia", "Chinese Taipei")
 )
 
 # Convert Country --> Country Code
 spp = spp %>%
   filter(Source.Location != "")
+
 spp$countryCode = sapply(spp$Source.Location, flexible_country_code)
+
 spp = subset(spp, !is.na(countryCode) & countryCode != "")
 
 # Apply the function to the Source.Location column
