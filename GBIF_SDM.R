@@ -14,10 +14,11 @@ require(countrycode)
 rm(list = ls())
 
 setwd("~/Automated-GBIF-Species-Distribution-Modeling/")
+setwd("C:/Users/kisei.tanaka/Automated-GBIF-Species-Distribution-Modeling")
 
 # ---- 1: Load Script Functions ----
 
-source(here::here("~/Automated-GBIF-Species-Distribution-Modeling/GBIF_SDM_Functions.R"))        # REPLACE W/ YOUR PATH TO GBIF_SDM_Functions.R
+source("GBIF_SDM_Functions.R")        # REPLACE W/ YOUR PATH TO GBIF_SDM_Functions.R
 
 # ---- 2: Download BioClim Data ----
 
