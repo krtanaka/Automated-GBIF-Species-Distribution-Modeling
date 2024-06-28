@@ -27,23 +27,34 @@ bioclim_download(resolution = 2.5) # Adjust resolution as needed
 # ---- 3: Batch Read BioClim Folder Data ----
 
 bioclim_dir = here::here("data2", "climate", "wc2.1_2.5m") # Adjust version & resolution path accordingly
-bioclim_files = list.files(path = bioclim_dir, pattern = "\\.tif$", full.names = TRUE)
+bioclim_dir = here::here("data2", "climate", "wc2.1_5m") # Adjust version & resolution path accordingly
+bioclim_dir = here::here("data2", "climate", "bio_oracle_v3") # Adjust version & resolution path accordingly
 
-bioclim_dir = here::here("data2", "climate", "biooracle") # Adjust version & resolution path accordingly
+bioclim_files = list.files(path = bioclim_dir, pattern = "\\.tif$", full.names = TRUE)
 bioclim_files = list.files(path = bioclim_dir, pattern = "\\.nc$", full.names = TRUE)
 
 # Convert to RasterStack for dismo::maxent()
 env_rs = raster::stack(bioclim_files)
-env_rs <- crop(env_rs, extent(-180, 180, -60, 60))
-bathy = raster("~/data2/ETOPO_2022_v1_15s_3f38_8816_d630.nc")
-bathy[bathy <= -30] <- NA
-bathy[bathy >= 0] <- NA  
-bathy = readAll(bathy)
-save(bathy, file = "~/Automated-GBIF-Species-Distribution-Modeling/data2/etopo_0-30.rdata")
+env_rs <- crop(env_rs, extent(-160, 125, -5, 24))
+env_rs[[5]][env_rs[[5]] <= -100] <- NA
+env_rs[[1]] <- mask(env_rs[[1]], env_rs[[5]])
+env_rs[[2]] <- mask(env_rs[[2]], env_rs[[5]])
+env_rs[[3]] <- mask(env_rs[[3]], env_rs[[5]])
+env_rs[[4]] <- mask(env_rs[[4]], env_rs[[5]])
+env_rs[[5]] <- mask(env_rs[[5]], env_rs[[5]])
+env_rs[[6]] <- mask(env_rs[[6]], env_rs[[5]])
+
+# bathy = raster("~/data2/ETOPO_2022_v1_15s_3f38_8816_d630.nc")
+# bathy[bathy <= -30] <- NA
+# bathy[bathy >= 0] <- NA  
+# bathy = readAll(bathy)
+# save(bathy, file = "~/Automated-GBIF-Species-Distribution-Modeling/data2/etopo_0-30.rdata")
 load("~/Automated-GBIF-Species-Distribution-Modeling/data2/etopo_0-30.rdata")
 env_rs <- crop(env_rs, extent(bathy))
 env_rs <- resample(env_rs, bathy)
 env_rs <- mask(env_rs, bathy)
+save(env_rs, file = "~/Automated-GBIF-Species-Distribution-Modeling/data2/env_rs.rdata")
+load("~/Automated-GBIF-Species-Distribution-Modeling/data2/env_rs.rdata")
 
 # Optionally, save the clipped raster
 writeRaster(clipped_env_rs, "clipped_env_rs.grd", overwrite = TRUE)
