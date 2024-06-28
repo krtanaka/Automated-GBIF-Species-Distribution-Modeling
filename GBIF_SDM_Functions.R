@@ -1,8 +1,11 @@
 # ---- Download Bioclimatic data from Worldclim ----
 
 bioclim_download = function(resolution = 10) {
+  
   # Create the "data" directory if it doesn't exist
-  data_dir = here::here("data2")
+  # data_dir = here::here("data2")
+  data_dir = file.path(fs::path_home(), "Desktop/data")
+  
   if (!dir.exists(data_dir)) {
     dir.create(data_dir, recursive = TRUE)
   }

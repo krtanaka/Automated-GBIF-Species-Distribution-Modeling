@@ -15,43 +15,46 @@ rm(list = ls())
 
 # ---- 1: Load Script Functions ----
 
-source("GBIF_SDM_Functions.R")        # REPLACE W/ YOUR PATH TO GBIF_SDM_Functions.R
+source("GBIF_SDM_Functions.R") # REPLACE W/ YOUR PATH TO GBIF_SDM_Functions.R
 
 # ---- 2: Download BioClim Data ----
 
 bioclim_download(resolution = 2.5) # Adjust resolution as needed
 
 # ---- 3: Batch Read BioClim Folder Data ----
-
-bioclim_dir = here::here("data2", "climate", "wc2.1_2.5m") # Adjust version & resolution path accordingly
-bioclim_dir = here::here("data2", "climate", "wc2.1_5m") # Adjust version & resolution path accordingly
-bioclim_dir = here::here("data2", "climate", "bio_oracle_v3") # Adjust version & resolution path accordingly
+# Adjust version & resolution path accordingly
+bioclim_dir = file.path(fs::path_home(), "Desktop/data", "climate", "wc2.1_30s") 
+bioclim_dir = file.path(fs::path_home(), "Desktop/data", "climate", "wc2.1_2.5m") 
+bioclim_dir = file.path(fs::path_home(), "Desktop/data", "climate", "wc2.1_5m") 
+bioclim_dir = file.path(fs::path_home(), "Desktop/data", "climate", "wc2.1_10m") 
+bioclim_dir = file.path(fs::path_home(), "Desktop/data", "climate", "bio_oracle_v3") 
 
 bioclim_files = list.files(path = bioclim_dir, pattern = "\\.tif$", full.names = TRUE)
 bioclim_files = list.files(path = bioclim_dir, pattern = "\\.nc$", full.names = TRUE)
 
 # Convert to RasterStack for dismo::maxent()
 env_rs = raster::stack(bioclim_files)
+
 env_rs <- crop(env_rs, extent(-160, 125, -5, 24))
-env_rs[[5]][env_rs[[5]] <= -100] <- NA
-env_rs[[1]] <- mask(env_rs[[1]], env_rs[[5]])
-env_rs[[2]] <- mask(env_rs[[2]], env_rs[[5]])
-env_rs[[3]] <- mask(env_rs[[3]], env_rs[[5]])
-env_rs[[4]] <- mask(env_rs[[4]], env_rs[[5]])
-env_rs[[5]] <- mask(env_rs[[5]], env_rs[[5]])
-env_rs[[6]] <- mask(env_rs[[6]], env_rs[[5]])
+env_rs[["Bathymetry.Mean"]][ env_rs[["Bathymetry.Mean"]] <= -100] <- NA
+env_rs[[1]] <- mask(env_rs[[1]], env_rs[["Bathymetry.Mean"]])
+env_rs[[2]] <- mask(env_rs[[2]], env_rs[["Bathymetry.Mean"]])
+env_rs[[3]] <- mask(env_rs[[3]], env_rs[["Bathymetry.Mean"]])
+env_rs[[4]] <- mask(env_rs[[4]], env_rs[["Bathymetry.Mean"]])
+env_rs[[6]] <- mask(env_rs[[6]], env_rs[["Bathymetry.Mean"]])
 
 # bathy = raster("~/data2/ETOPO_2022_v1_15s_3f38_8816_d630.nc")
 # bathy[bathy <= -30] <- NA
 # bathy[bathy >= 0] <- NA  
 # bathy = readAll(bathy)
 # save(bathy, file = "~/Automated-GBIF-Species-Distribution-Modeling/data2/etopo_0-30.rdata")
-load("~/Automated-GBIF-Species-Distribution-Modeling/data2/etopo_0-30.rdata")
-env_rs <- crop(env_rs, extent(bathy))
-env_rs <- resample(env_rs, bathy)
-env_rs <- mask(env_rs, bathy)
-save(env_rs, file = "~/Automated-GBIF-Species-Distribution-Modeling/data2/env_rs.rdata")
-load("~/Automated-GBIF-Species-Distribution-Modeling/data2/env_rs.rdata")
+load(file.path(fs::path_home(), "Desktop/data/etopo_0-30.rdata"))
+# env_rs <- crop(env_rs, extent(bathy))
+env_rs <- terra::resample(rast(env_rs), rast(bathy))
+env_rs = raster(env_rs)
+# env_rs <- mask(env_rs, bathy)
+# save(env_rs, file = "~/Automated-GBIF-Species-Distribution-Modeling/data2/env_rs.rdata")
+# load("~/Automated-GBIF-Species-Distribution-Modeling/data2/env_rs.rdata")
 
 # ---- 4: Load Species Dataframe & Convert Countries ----
 
@@ -59,7 +62,7 @@ load("~/Automated-GBIF-Species-Distribution-Modeling/data2/env_rs.rdata")
 spp = data.frame(
   # Scientific.Name = "Adelges tsugae",
   Scientific.Name = "Unomia stolonifera",
-  Scientific.Name = "Herklotsichthys quadrimaculatus",
+  # Scientific.Name = "Herklotsichthys quadrimaculatus",
   Source.Location = c("Venezuela", "Cuba", "Philippines", "Indonesia", "Chinese Taipei")
 )
 
@@ -101,7 +104,7 @@ save(maxent_results, file = "maxent_results.rda")
 
 # Use world country boundaries to clip prediction extent for each species
 # https://public.opendatasoft.com/explore/dataset/world-administrative-boundaries/information/?flg=en-us
-worldbound = st_read(here::here('data2', 'world-administrative-boundaries', 'world-administrative-boundaries.shp'))
+worldbound = st_read(file.path(fs::path_home(), "Desktop/data", 'world-administrative-boundaries', 'world-administrative-boundaries.shp'))
 
 # Batch clip prediction extents
 clipped_rasters_list <- spp_clip_raster(spp, worldbound, env_rs)
