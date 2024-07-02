@@ -43,6 +43,10 @@ gbif_occ_data = function(scientific_name, countries) {
 # ---- Run MaxEnt Batch ----
 
 run_maxent = function(occ_sf, env) {
+  
+  occ_sf = occ_df
+  env = env_rs
+  
   # Get unique Scientific Names
   print(class(occ_sf$Scientific.Name))
   species = unique(occ_sf$Scientific.Name)
@@ -53,6 +57,9 @@ run_maxent = function(occ_sf, env) {
   
   # Loop through each species
   for(sp in species) {
+    
+    sp = "Unomia stolonifera"
+    
     cat(paste("Processing", sp, "\n"))
     
     # Subset occurrence data for the species
@@ -64,7 +71,7 @@ run_maxent = function(occ_sf, env) {
                                   tune.args = list(fc = c("L","LQ","H", "LQH", "LQHP", "LQHPT"), rm = 1:5), 
                                   partitions = "randomkfold", partition.settings = list(kfolds = 2), 
                                   algorithm = "maxnet", 
-                                  n.bg = 100,
+                                  # n.bg = 100,
                                   taxon.name = sp)  # specify the taxon name here
     
     enmeval_df = enmeval_results@results
