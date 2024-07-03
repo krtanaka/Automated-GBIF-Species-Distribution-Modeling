@@ -1,5 +1,3 @@
-# ---- 0: Load Packages ----
-
 require(tidyverse)
 require(rgbif)
 require(sf)
@@ -10,85 +8,30 @@ require(ecospat)
 require(rJava)
 require(dismo)
 require(countrycode)
+library(readr)
+library(colorRamps)
 
 rm(list = ls())
 
-# ---- 1: Load Script Functions ----
-
 source("GBIF_SDM_Functions.R") # REPLACE W/ YOUR PATH TO GBIF_SDM_Functions.R
 
-# ---- 4: Load Species Dataframe & Convert Countries ----
-
-# Example Dataframe - Replace W/ Your Own
-spp = data.frame(
-  Scientific.Name = "Unomia stolonifera",
-  # Scientific.Name = "Lutjanus gibbus",
-  # Scientific.Name = "Heniochus diphreutes",
-  # Scientific.Name = "Herklotsichthys quadrimaculatus",
-  Source.Location = c("Venezuela", "Cuba", "Philippines", "Indonesia", "Chinese Taipei")
-)
-
-# Convert Country --> Country Code
-spp = spp %>%
-  filter(Source.Location != "")
-
-spp$countryCode = sapply(spp$Source.Location, flexible_country_code)
-
-spp = subset(spp, !is.na(countryCode) & countryCode != "")
-
-# Apply the function to the Source.Location column
-spp$Source.Location = sapply(spp$Source.Location, region_to_country, mapping = region_mapping)
-
-# ---- 5: Download Species Data from GBIF ----
-
-# Apply the function to each scientific name in the dataframe
-occ_list = setNames(mapply(gbif_occ_data, 
-                           spp$Scientific.Name, 
-                           spp$countryCode, 
-                           SIMPLIFY = FALSE), 
-                    spp$Scientific.Name)
-
-# Convert the list to a data frame, and also create a new column to hold the Scientific.Name
-occ_df = bind_rows(occ_list, .id = "Scientific.Name")
-
-# Remove NA values
-occ_df = occ_df[complete.cases(occ_df), ]
+occ_df = read_csv("occurances_Unomia_stolonifera.csv") %>% as.data.frame()
 
 # Check how many occurrences subset for each spp.
 table(occ_df$Scientific.Name)
 
-# ---- 3: Batch Read BioClim Folder Data ----
-# Convert to RasterStack for dismo::maxent()
-
-bioclim_dir = file.path(fs::path_home(), "Desktop/data", "bio_oracle_v3") 
-bioclim_files = list.files(path = bioclim_dir, pattern = "\\.nc$", full.names = TRUE)
-bioclim_rs = raster::stack(bioclim_files)
-bioclim_rs <- crop(bioclim_rs, extent(floor(range(occ_df$Longitude)), floor(range(occ_df$Latitude))))
-bioclim_rs[["Bathymetry.Min"]][ bioclim_rs[["Bathymetry.Min"]] <= -100] <- NA
-
-pb <- txtProgressBar(min = 0, max = length(bioclim_files), style = 3)
-
-for (e in 1:length(bioclim_files)) {
-  
-  setTxtProgressBar(pb, e)
-  bioclim_rs[[e]] <- mask(bioclim_rs[[e]], bioclim_rs[["Bathymetry.Min"]])
-  
-}
-
-close(pb)
-plot(bioclim_rs)
-bioclim_names = names(bioclim_rs); bioclim_names
+# ---- 3: Batch Read Folder Data ----
+bio_oracle_dir = file.path(fs::path_home(), "Desktop/data", "bio_oracle_v3") 
+bio_oracle_files = list.files(path = bio_oracle_dir, pattern = "\\.nc$", full.names = TRUE)
+bio_oracle_rs = raster::stack(bio_oracle_files)
 
 anth_dir = file.path(fs::path_home(), "Desktop/data", "sedac_gfw") 
 anth_files = list.files(path = anth_dir, full.names = TRUE)
-
 anth_rs <- list()
-
 pb <- txtProgressBar(min = 0, max = length(anth_files), style = 3)
-
 for (e in 1:length(anth_files[1:2])) {
   
-  # e = 1
+  # e = 2
   
   setTxtProgressBar(pb, e)
   anth_rs_e <- terra::rast(anth_files[e])
@@ -98,24 +41,64 @@ for (e in 1:length(anth_files[1:2])) {
     name = names(anth_rs_e[[1]])
     anth_rs_e = mean(anth_rs_e[[1:5]])
     names(anth_rs_e) = name
-  
+    
   }
   
-  anth_rs_e <- crop(anth_rs_e, extent(floor(range(occ_df$Longitude)), floor(range(occ_df$Latitude))))
-  anth_rs_e <- terra::resample(anth_rs_e, rast(bioclim_rs))
-  anth_rs_e <- mask(anth_rs_e, rast(bioclim_rs[["Bathymetry.Min"]]))
-  # plot(anth_rs_e, col = matlab.like(100))
-  
+  anth_rs_e <- terra::resample(anth_rs_e, rast(bio_oracle_rs))
   anth_rs[[e]] <- raster(anth_rs_e)
+  
+}
+close(pb)
+anth_rs <- stack(anth_rs)
+
+env_rs = stack(bio_oracle_rs, anth_rs)
+
+env_rs_i = env_rs
+env_rs_i[["Bathymetry.Min"]][ env_rs_i[["Bathymetry.Min"]] <= -100] <- NA
+env_rs_i <- crop(env_rs_i, extent(floor(range(occ_df$Longitude)), floor(range(occ_df$Latitude))))
+
+pb <- txtProgressBar(min = 0, max = dim(env_rs_i)[3], style = 3)
+
+for (e in 1:dim(env_rs_i)[3]) {
+  
+  # e = 2
+  
+  setTxtProgressBar(pb, e)
+  env_rs_i[[e]] <- mask(rast(env_rs_i[[e]]), rast(env_rs_i[["Bathymetry.Min"]]))
+  # plot(env_rs_i[[e]], col = matlab.like(100))
   
 }
 
 close(pb)
-anth_rs <- stack(anth_rs)
-anth_rs <- crop(anth_rs, extent(floor(range(occ_df$Longitude)), floor(range(occ_df$Latitude))))
+plot(env_rs_i, col = matlab.like(100))
+
+# ---- 6: Batch Run MaxEnt Models on all species ----
+maxent_results = run_maxent(occ_df, env_rs_i)
+save(maxent_results, file = "maxent_results.rda")
+
+bio_oracle_rs_i <- crop(bio_oracle_rs, extent(floor(range(occ_df$Longitude)), floor(range(occ_df$Latitude))))
+bio_oracle_rs_i[["Bathymetry.Min"]][ bio_oracle_rs_i[["Bathymetry.Min"]] <= -100] <- NA
+
+pb <- txtProgressBar(min = 0, max = length(bio_oracle_files), style = 3)
+
+for (e in 1:length(bio_oracle_files)) {
+  
+  setTxtProgressBar(pb, e)
+  bio_oracle_rs_i[[e]] <- mask(bio_oracle_rs_i[[e]], bio_oracle_rs_i[["Bathymetry.Min"]])
+  
+}
+
+close(pb)
+plot(bio_oracle_rs_i)
+
+
+close(pb)
+anth_rs_i <- stack(anth_rs)
+anth_rs_i <- crop(anth_rs_i, extent(floor(range(occ_df$Longitude)), floor(range(occ_df$Latitude))))
+anth_rs_i <- mask(anth_rs_i, rast(bio_oracle_rs[["Bathymetry.Min"]]))
 plot(anth_rs, col = matlab.like(100))
 
-env_rs = stack(bioclim_rs, anth_rs)
+env_rs = stack(bio_oracle_rs, anth_rs)
 plot(env_rs, col = matlab.like(100))
 
 names(env_rs)
@@ -137,10 +120,8 @@ plot(env_rs, col = matlab.like(100))
 # save(env_rs, file = "~/Automated-GBIF-Species-Distribution-Modeling/data2/env_rs.rdata")
 # load("~/Automated-GBIF-Species-Distribution-Modeling/data2/env_rs.rdata")
 
-# ---- 6: Batch Run MaxEnt Models on all species ----
 
-maxent_results = run_maxent(occ_df, env_rs)
-save(maxent_results, file = "maxent_results.rda")
+
 
 # ---- 7: Predict Species in Source.Location ----
 
@@ -148,22 +129,22 @@ save(maxent_results, file = "maxent_results.rda")
 # https://public.opendatasoft.com/explore/dataset/world-administrative-boundaries/information/?flg=en-us
 worldbound = st_read(file.path(fs::path_home(), "Desktop/data", 'world-administrative-boundaries', 'world-administrative-boundaries.shp'))
 
-bioclim_dir = file.path(fs::path_home(), "Desktop/data", "bio_oracle_v3") 
-bioclim_files = list.files(path = bioclim_dir, pattern = "\\.nc$", full.names = TRUE)
-bioclim_rs = raster::stack(bioclim_files)
-bioclim_rs[["Bathymetry.Min"]][ bioclim_rs[["Bathymetry.Min"]] <= -500] <- NA
+bio_oracle_dir = file.path(fs::path_home(), "Desktop/data", "bio_oracle_v3") 
+bio_oracle_files = list.files(path = bio_oracle_dir, pattern = "\\.nc$", full.names = TRUE)
+bio_oracle_rs = raster::stack(bio_oracle_files)
+bio_oracle_rs[["Bathymetry.Min"]][ bio_oracle_rs[["Bathymetry.Min"]] <= -500] <- NA
 
-pb <- txtProgressBar(min = 0, max = length(bioclim_files), style = 3)
+pb <- txtProgressBar(min = 0, max = length(bio_oracle_files), style = 3)
 
-for (e in 1:length(bioclim_files)) {
+for (e in 1:length(bio_oracle_files)) {
   
   setTxtProgressBar(pb, e)
-  bioclim_rs[[e]] <- mask(bioclim_rs[[e]], bioclim_rs[["Bathymetry.Min"]])
+  bio_oracle_rs[[e]] <- mask(bio_oracle_rs[[e]], bio_oracle_rs[["Bathymetry.Min"]])
   
 }
 
 close(pb)
-plot(bioclim_rs)
+plot(bio_oracle_rs)
 
 anth_dir = file.path(fs::path_home(), "Desktop/data", "sedac_gfw") 
 anth_files = list.files(path = anth_dir, full.names = TRUE)
@@ -188,8 +169,8 @@ for (e in 1:length(anth_files[c(1:2, 5)])) {
   }
   
   anth_rs_e <- crop(anth_rs_e, extent(floor(range(occ_df$Longitude)), floor(range(occ_df$Latitude))))
-  anth_rs_e <- terra::resample(anth_rs_e, rast(bioclim_rs))
-  anth_rs_e <- mask(anth_rs_e, rast(bioclim_rs[["Bathymetry.Min"]]))
+  anth_rs_e <- terra::resample(anth_rs_e, rast(bio_oracle_rs))
+  anth_rs_e <- mask(anth_rs_e, rast(bio_oracle_rs[["Bathymetry.Min"]]))
   # plot(anth_rs_e, col = matlab.like(100))
   
   anth_rs[[e]] <- raster(anth_rs_e)
@@ -200,7 +181,7 @@ close(pb)
 anth_rs <- stack(anth_rs)
 plot(anth_rs, col = matlab.like(100))
 
-env_rs = stack(bioclim_rs, anth_rs)
+env_rs = stack(bio_oracle_rs, anth_rs)
 plot(env_rs, col = matlab.like(100))
 
 # plot(env_rs)
