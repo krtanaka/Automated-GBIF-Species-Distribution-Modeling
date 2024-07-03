@@ -22,6 +22,8 @@ source("GBIF_SDM_Functions.R") # REPLACE W/ YOUR PATH TO GBIF_SDM_Functions.R
 # Example Dataframe - Replace W/ Your Own
 spp = data.frame(
   Scientific.Name = "Unomia stolonifera",
+  # Scientific.Name = "Lutjanus gibbus",
+  # Scientific.Name = "Heniochus diphreutes",
   # Scientific.Name = "Herklotsichthys quadrimaculatus",
   Source.Location = c("Venezuela", "Cuba", "Philippines", "Indonesia", "Chinese Taipei")
 )
@@ -56,47 +58,69 @@ occ_df = occ_df[complete.cases(occ_df), ]
 table(occ_df$Scientific.Name)
 
 # ---- 3: Batch Read BioClim Folder Data ----
-# Adjust version & resolution path accordingly
-bioclim_dir = file.path(fs::path_home(), "Desktop/data", "bio_oracle_v3") 
-sedac_gfw_dir = file.path(fs::path_home(), "Desktop/data", "sedac_gfw") 
-
-bioclim_files = list.files(path = bioclim_dir, pattern = "\\.nc$", full.names = TRUE)
-sedac_gfw_files = list.files(path = sedac_gfw_dir, full.names = TRUE)
-
 # Convert to RasterStack for dismo::maxent()
-env_rs = raster::stack(bioclim_files)
-env_rs <- crop(env_rs, extent(floor(range(occ_df$Longitude)), floor(range(occ_df$Latitude))))
-env_rs[["Bathymetry.Min"]][ env_rs[["Bathymetry.Min"]] <= -100] <- NA
+
+bioclim_dir = file.path(fs::path_home(), "Desktop/data", "bio_oracle_v3") 
+bioclim_files = list.files(path = bioclim_dir, pattern = "\\.nc$", full.names = TRUE)
+bioclim_rs = raster::stack(bioclim_files)
+bioclim_rs <- crop(bioclim_rs, extent(floor(range(occ_df$Longitude)), floor(range(occ_df$Latitude))))
+bioclim_rs[["Bathymetry.Min"]][ bioclim_rs[["Bathymetry.Min"]] <= -100] <- NA
+
+pb <- txtProgressBar(min = 0, max = length(bioclim_files), style = 3)
+
 for (e in 1:length(bioclim_files)) {
   
-  env_rs[[e]] <- mask(env_rs[[e]], env_rs[["Bathymetry.Min"]])
-
+  setTxtProgressBar(pb, e)
+  bioclim_rs[[e]] <- mask(bioclim_rs[[e]], bioclim_rs[["Bathymetry.Min"]])
+  
 }
+
+close(pb)
+plot(bioclim_rs)
+bioclim_names = names(bioclim_rs); bioclim_names
+
+anth_dir = file.path(fs::path_home(), "Desktop/data", "sedac_gfw") 
+anth_files = list.files(path = anth_dir, full.names = TRUE)
 
 anth_rs <- list()
 
-for (e in 1:length(sedac_gfw_files)) {
+pb <- txtProgressBar(min = 0, max = length(anth_files), style = 3)
+
+for (e in 1:length(anth_files[1:2])) {
   
-  # e = 4
+  # e = 1
   
-  anth_rs_e = terra::rast(sedac_gfw_files[e])
+  setTxtProgressBar(pb, e)
+  anth_rs_e <- terra::rast(anth_files[e])
+  
+  if (e %in% c(3:6)) {
+    
+    name = names(anth_rs_e[[1]])
+    anth_rs_e = mean(anth_rs_e[[1:5]])
+    names(anth_rs_e) = name
+  
+  }
+  
   anth_rs_e <- crop(anth_rs_e, extent(floor(range(occ_df$Longitude)), floor(range(occ_df$Latitude))))
-  anth_rs_e = terra::resample(anth_rs_e, rast(env_rs))
-  anth_rs_e <- mask(anth_rs_e, rast(env_rs[["Bathymetry.Min"]]))
-  plot(anth_rs_e)
+  anth_rs_e <- terra::resample(anth_rs_e, rast(bioclim_rs))
+  anth_rs_e <- mask(anth_rs_e, rast(bioclim_rs[["Bathymetry.Min"]]))
+  # plot(anth_rs_e, col = matlab.like(100))
   
   anth_rs[[e]] <- raster(anth_rs_e)
-
+  
 }
 
+close(pb)
 anth_rs <- stack(anth_rs)
+anth_rs <- crop(anth_rs, extent(floor(range(occ_df$Longitude)), floor(range(occ_df$Latitude))))
 plot(anth_rs, col = matlab.like(100))
 
-env_rs = stack(env_rs, anth_rs)
+env_rs = stack(bioclim_rs, anth_rs)
+plot(env_rs, col = matlab.like(100))
 
 names(env_rs)
 
-plot(env_rs[], col = matlab.like(100))
+plot(env_rs, col = matlab.like(100))
 
 # bathy = raster("~/data2/ETOPO_2022_v1_15s_3f38_8816_d630.nc")
 # bathy[bathy <= -30] <- NA
@@ -124,21 +148,66 @@ save(maxent_results, file = "maxent_results.rda")
 # https://public.opendatasoft.com/explore/dataset/world-administrative-boundaries/information/?flg=en-us
 worldbound = st_read(file.path(fs::path_home(), "Desktop/data", 'world-administrative-boundaries', 'world-administrative-boundaries.shp'))
 
-# Convert to RasterStack for dismo::maxent()
-env_rs = raster::stack(bioclim_files)
-env_rs[["Bathymetry.Min"]][ env_rs[["Bathymetry.Min"]] <= -500] <- NA
+bioclim_dir = file.path(fs::path_home(), "Desktop/data", "bio_oracle_v3") 
+bioclim_files = list.files(path = bioclim_dir, pattern = "\\.nc$", full.names = TRUE)
+bioclim_rs = raster::stack(bioclim_files)
+bioclim_rs[["Bathymetry.Min"]][ bioclim_rs[["Bathymetry.Min"]] <= -500] <- NA
+
+pb <- txtProgressBar(min = 0, max = length(bioclim_files), style = 3)
 
 for (e in 1:length(bioclim_files)) {
   
-  env_rs[[e]] <- mask(env_rs[[e]], env_rs[["Bathymetry.Min"]])
+  setTxtProgressBar(pb, e)
+  bioclim_rs[[e]] <- mask(bioclim_rs[[e]], bioclim_rs[["Bathymetry.Min"]])
   
 }
+
+close(pb)
+plot(bioclim_rs)
+
+anth_dir = file.path(fs::path_home(), "Desktop/data", "sedac_gfw") 
+anth_files = list.files(path = anth_dir, full.names = TRUE)
+
+anth_rs <- list()
+
+pb <- txtProgressBar(min = 0, max = length(anth_files), style = 3)
+
+for (e in 1:length(anth_files[c(1:2, 5)])) {
+  
+  # e = 1
+  
+  setTxtProgressBar(pb, e)
+  anth_rs_e <- terra::rast(sedac_gfw_files[e])
+  
+  if (e %in% c(3:6)) {
+    
+    name = names(anth_rs_e[[1]])
+    anth_rs_e = mean(anth_rs_e[[1:5]])
+    names(anth_rs_e) = name
+    
+  }
+  
+  anth_rs_e <- crop(anth_rs_e, extent(floor(range(occ_df$Longitude)), floor(range(occ_df$Latitude))))
+  anth_rs_e <- terra::resample(anth_rs_e, rast(bioclim_rs))
+  anth_rs_e <- mask(anth_rs_e, rast(bioclim_rs[["Bathymetry.Min"]]))
+  # plot(anth_rs_e, col = matlab.like(100))
+  
+  anth_rs[[e]] <- raster(anth_rs_e)
+  
+}
+
+close(pb)
+anth_rs <- stack(anth_rs)
+plot(anth_rs, col = matlab.like(100))
+
+env_rs = stack(bioclim_rs, anth_rs)
+plot(env_rs, col = matlab.like(100))
 
 # plot(env_rs)
 
 # Batch clip prediction extents
 # clipped_rasters_list <- spp_clip_raster(spp, worldbound, env_rs)
-clipped_rasters_list <- spp_clip_raster_island(spp, worldbound, env_rs, "Hawaii")
+clipped_rasters_list <- spp_clip_raster_island(spp, worldbound, env_rs, "Oahu")
 plot(clipped_rasters_list[[1]])
 # env_rs <- terra::resample(rast(env_rs), rast(bathy))
 
@@ -161,9 +230,9 @@ mean_lat <- mean(coords[, 2], na.rm = TRUE)
 mean_lon <- mean(coords[, 1], na.rm = TRUE)
 
 map = ggmap::get_map(location = c(mean_lon, mean_lat),
-              maptype = "satellite",
-              zoom = 9,
-              force = T)
+                     maptype = "satellite",
+                     zoom = 9,
+                     force = T)
 
 r = rasterToPoints(r) %>% as.data.frame()
 
@@ -178,7 +247,7 @@ ggmap(map) +
         legend.box.background = element_blank(), # Makes the legend box background transparent
         legend.text = element_text(color = "white"), # Makes the legend text white
         legend.title = element_text(color = "white") # Makes the legend title white
-        )
+  )
 
 ggsave(last_plot(), filename = '~/Desktop/Unomia_Thermal_SDM_output.png', height = 8, width = 8)
 
