@@ -44,11 +44,12 @@ gbif_occ_data = function(scientific_name, countries) {
 
 run_maxent = function(occ_sf, env) {
   
-  occ_sf = occ_df
-  env = env_rs
+  # occ_sf = occ_df
+  # env = env_rs
+  # env = env_rs_i
   
   # Get unique Scientific Names
-  print(class(occ_sf$Scientific.Name))
+  print(unique(occ_sf$Scientific.Name))
   species = unique(occ_sf$Scientific.Name)
   
   # Initialize lists to store results
@@ -58,7 +59,8 @@ run_maxent = function(occ_sf, env) {
   # Loop through each species
   for(sp in species) {
     
-    sp = "Unomia stolonifera"
+    # sp = "Unomia stolonifera"
+    sp = species[1]
     
     cat(paste("Processing", sp, "\n"))
     
@@ -72,6 +74,9 @@ run_maxent = function(occ_sf, env) {
                                   partitions = "randomkfold", partition.settings = list(kfolds = 2), 
                                   algorithm = "maxnet", 
                                   # n.bg = 100,
+                                  parallel = T,
+                                  numCores = 14,
+                                  updateProgress = T,
                                   taxon.name = sp)  # specify the taxon name here
     
     enmeval_df = enmeval_results@results
@@ -95,6 +100,7 @@ run_maxent = function(occ_sf, env) {
     
     # Store maxent model
     maxent_models[[sp]] = sp_maxent_model
+    
   }
   
   return(list(enm = enm_results, models = maxent_models))
@@ -194,7 +200,7 @@ spp_clip_raster <- function(spp, worldbound, env_rs) {
 
 spp_clip_raster_island <- function(spp, worldbound, env_rs, island) {
   
-  boxes = read_csv("Bounding_Boxes.csv")
+  boxes = read_csv("data/Bounding_Boxes.csv")
   
   # Ensure the worldbound is in the same CRS as env_rs
   worldbound <- st_transform(worldbound, crs = crs(env_rs))

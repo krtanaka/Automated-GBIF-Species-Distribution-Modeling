@@ -13,16 +13,33 @@ library(colorRamps)
 library(ggmap)
 library(ggspatial)
 
-rm(list = ls())
+# rm(list = ls())
 
-source("GBIF_SDM_Functions.R") # REPLACE W/ YOUR PATH TO GBIF_SDM_Functions.R
+source("script/GBIF_SDM_Functions.R") # REPLACE W/ YOUR PATH TO GBIF_SDM_Functions.R
 
-occ_df = read_csv("occurances_Unomia_stolonifera.csv") %>% as.data.frame()
-occ_df = read_csv("occurances_Heniochus_diphreutes.csv") %>% as.data.frame()
+species_list <- c(
+  "Unomia stolonifera"
+  # "Lutjanus gibbus",
+  # "Heniochus diphreutes",
+  # "Herklotsichthys quadrimaculatus",
+  # "Acropora globiceps",
+  # "Isopora crateriformis"
+)
+
+occ_df = read_csv("data/occurances_multi.csv") %>% 
+  filter(Scientific.Name %in% species_list) %>%
+  as.data.frame()
 
 # Check how many occurrences subset for each spp.
 table(occ_df$Scientific.Name)
 
+env_rs_i = env_rs
+env_rs_i[["Bathymetry.Min"]][ env_rs_i[["Bathymetry.Min"]] <= -100] <- NA
+env_rs_i <- crop(env_rs_i, extent(floor(range(occ_df$Longitude)), floor(range(occ_df$Latitude))))
+env_rs_i = mask(rast(env_rs_i), rast(env_rs_i[["Bathymetry.Min"]]))
+env_rs_i = env_rs_i[[c(1, 6, 7, 9, 17, 23:26, 30, 32, 33)]]
+env_rs_i = stack(env_rs_i)
+plot(env_rs_i, col = matlab.like(100))
 
 # ---- 6: Batch Run MaxEnt Models on all species ----
 maxent_results = run_maxent(occ_df, env_rs_i)
@@ -35,16 +52,16 @@ worldbound = st_read(file.path(fs::path_home(), "Desktop/data", 'world-administr
 
 # Batch clip prediction extents
 # clipped_rasters_list <- spp_clip_raster(spp, worldbound, env_rs)
-clipped_rasters_list <- spp_clip_raster_island(occ_df, worldbound, env_rs, "Oahu")
+clipped_rasters_list <- spp_clip_raster_island(occ_df, worldbound, env_rs, "Tutuila")
 plot(clipped_rasters_list[[1]])
 # env_rs <- terra::resample(rast(env_rs), rast(bathy))
 
 # Create the "MaxEnt_Predictions" directory to store results
-dir.create("MaxEnt_Target_Predictions", showWarnings = FALSE)
+# dir.create("MaxEnt_Target_Predictions", showWarnings = FALSE)
 
-plot(maxent_results$models[1]$`Unomia stolonifera`)
+plot(maxent_results$models$`Isopora crateriformis`)
 
-r <- predict(maxent_results$models[1]$`Unomia stolonifera`, clipped_rasters_list[[1]]) 
+r <- predict(maxent_results$models[1]$`Isopora crateriformis`, clipped_rasters_list[[1]]) 
 plot(r, col = matlab.like(100))
 
 # use ggmap
@@ -59,7 +76,7 @@ mean_lon <- mean(coords[, 1], na.rm = TRUE)
 
 map = ggmap::get_map(location = c(mean_lon, mean_lat),
                      maptype = "satellite",
-                     zoom = 9,
+                     # zoom = 9,
                      force = T)
 
 r = rasterToPoints(r) %>% as.data.frame()
