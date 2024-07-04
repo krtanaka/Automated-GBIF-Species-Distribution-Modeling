@@ -39,6 +39,8 @@ env_rs_i <- crop(env_rs_i, extent(floor(range(occ_df$Longitude)), floor(range(oc
 env_rs_i = mask(rast(env_rs_i), rast(env_rs_i[["Bathymetry.Min"]]))
 env_rs_i = env_rs_i[[c(1, 6, 7, 9, 17, 23:26, 30, 32, 33)]]
 env_rs_i = stack(env_rs_i)
+env_rs_i = readAll(env_rs_i)
+save(env_rs_i, file = "data/env_rs_i.RData")
 plot(env_rs_i, col = matlab.like(100))
 
 # ---- 6: Batch Run MaxEnt Models on all species ----
@@ -83,7 +85,7 @@ r = rasterToPoints(r) %>% as.data.frame()
 
 ggmap(map) +
   geom_spatial_point(data = r, aes(x, y, fill = layer, color = layer), 
-                     size = 10, shape = 22, alpha = 0.7, crs = 4326) + 
+                     size = 11, shape = 22, alpha = 0.7, crs = 4326) + 
   scale_fill_gradientn(colors = matlab.like(100), "Habitat \nSuitability \n(0-1)") + 
   scale_color_gradientn(colors = matlab.like(100), "Habitat \nSuitability \n(0-1)") + 
   ggtitle("Spatial distribution of U. stolonifera predicted habitat suitability") + 
