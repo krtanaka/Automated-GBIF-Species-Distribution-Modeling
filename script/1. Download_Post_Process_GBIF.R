@@ -9,6 +9,8 @@ library(dplyr)
 library(CoordinateCleaner)
 library(ggplot2)
 
+rm(list = ls())
+
 species_list <- c("Unomia stolonifera", 
                   "Lutjanus gibbus",
                   "Heniochus diphreutes",
@@ -22,7 +24,7 @@ pb <- txtProgressBar(min = 0, max = length(species_list), style = 3)
 
 for (s in 1:length(species_list)) {
   
-  # s = 1
+  # s = 5
   
   setTxtProgressBar(pb, s)
   
@@ -46,8 +48,7 @@ for (s in 1:length(species_list)) {
     setNames(tolower(names(.))) %>% # set lowercase column names to work with CoordinateCleaner
     filter(occurrencestatus  == "PRESENT") %>%
     filter(!basisofrecord %in% c("FOSSIL_SPECIMEN","LIVING_SPECIMEN")) %>%
-    # filter(year >= 2000) %>%
-    filter(year >= 1900) %>%
+    filter(if(species_list[s] %in% c("Acropora globiceps","Isopora crateriformis")) year >= 1900 else year >= 2000) %>%
     filter(coordinateprecision < 0.01 | is.na(coordinateprecision)) %>% 
     filter(coordinateuncertaintyinmeters < 10000 | is.na(coordinateuncertaintyinmeters)) %>%
     filter(!coordinateuncertaintyinmeters %in% c(301,3036,999,9999)) %>% 
@@ -56,8 +57,7 @@ for (s in 1:length(species_list)) {
     # cc_cap(buffer = 2000) %>% # remove capitals centroids within 2km
     # cc_inst(buffer = 2000) %>% # remove zoo and herbaria within 2km 
     # cc_sea() %>% # remove from ocean 
-    distinct(decimallongitude, decimallatitude, specieskey, datasetkey, countrycode, .keep_all = TRUE) %>%
-    glimpse() # look at results of pipeline
+    distinct(decimallongitude, decimallatitude, specieskey, datasetkey, countrycode, .keep_all = TRUE) 
   
   species = unique(df$species)
   species = gsub(" ", "_", species)
@@ -84,5 +84,4 @@ for (s in 1:length(species_list)) {
 }
 
 close(pb)
-
-
+readr::write_csv(occ_df, file = "data/occurances_multi.csv")
