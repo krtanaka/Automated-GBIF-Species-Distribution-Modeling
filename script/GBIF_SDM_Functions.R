@@ -75,7 +75,7 @@ run_maxent = function(occ_sf, env) {
                                   algorithm = "maxnet", 
                                   # n.bg = 100,
                                   parallel = T,
-                                  numCores = 14,
+                                  numCores = detectCores()-2,
                                   updateProgress = T,
                                   taxon.name = sp)  # specify the taxon name here
     
