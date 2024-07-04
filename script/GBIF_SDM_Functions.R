@@ -199,9 +199,9 @@ spp_clip_raster_island <- function(spp, worldbound, env_rs, island) {
   # Ensure the worldbound is in the same CRS as env_rs
   worldbound <- st_transform(worldbound, crs = crs(env_rs))
   
-  # Convert the string of country codes in spp dataframe to a list
-  spp <- spp %>%
-    mutate(country_list = str_split(countryCode, ";"))
+  # # Convert the string of country codes in spp dataframe to a list
+  # spp <- spp %>%
+  #   mutate(country_list = str_split(countryCode, ";"))
   
   # Initialize an empty list to store the clipped rasters
   clipped_rasters <- list()
