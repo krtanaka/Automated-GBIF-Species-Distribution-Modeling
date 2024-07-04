@@ -52,16 +52,16 @@ worldbound = st_read(file.path(fs::path_home(), "Desktop/data", 'world-administr
 
 # Batch clip prediction extents
 # clipped_rasters_list <- spp_clip_raster(spp, worldbound, env_rs)
-clipped_rasters_list <- spp_clip_raster_island(occ_df, worldbound, env_rs, "Tutuila")
+clipped_rasters_list <- spp_clip_raster_island(occ_df, worldbound, env_rs, "Oahu")
 plot(clipped_rasters_list[[1]])
 # env_rs <- terra::resample(rast(env_rs), rast(bathy))
 
 # Create the "MaxEnt_Predictions" directory to store results
 # dir.create("MaxEnt_Target_Predictions", showWarnings = FALSE)
 
-plot(maxent_results$models$`Isopora crateriformis`)
+plot(maxent_results$models$`Unomia stolonifera`)
 
-r <- predict(maxent_results$models[1]$`Isopora crateriformis`, clipped_rasters_list[[1]]) 
+r <- predict(maxent_results$models[1]$`Unomia stolonifera`, clipped_rasters_list[[1]]) 
 plot(r, col = matlab.like(100))
 
 # use ggmap
@@ -83,7 +83,7 @@ r = rasterToPoints(r) %>% as.data.frame()
 
 ggmap(map) +
   geom_spatial_point(data = r, aes(x, y, fill = layer, color = layer), 
-                     size = 8, shape = 22, alpha = 0.7, crs = 4326) + 
+                     size = 10, shape = 22, alpha = 0.7, crs = 4326) + 
   scale_fill_gradientn(colors = matlab.like(100), "Habitat \nSuitability \n(0-1)") + 
   scale_color_gradientn(colors = matlab.like(100), "Habitat \nSuitability \n(0-1)") + 
   ggtitle("Spatial distribution of U. stolonifera predicted habitat suitability") + 
@@ -94,7 +94,7 @@ ggmap(map) +
         legend.title = element_text(color = "white") # Makes the legend title white
   )
 
-ggsave(last_plot(), filename =  file.path(fs::path_home(), "Desktop/Unomia_Thermal_SDM_output.png"), height = 8, width = 8)
+ggsave(last_plot(), filename =  file.path("output/nomia_Thermal_SDM_output.png"), height = 5.5, width = 5.5)
 
 # Loop through each model and predict
 maxent_predict()
