@@ -39,6 +39,7 @@ env_rs_i[["Bathymetry.Min"]][ env_rs_i[["Bathymetry.Min"]] <= -100] <- NA
 env_rs_i <- crop(env_rs_i, extent(floor(range(occ_df$Longitude)), floor(range(occ_df$Latitude))))
 env_rs_i = mask(rast(env_rs_i), rast(env_rs_i[["Bathymetry.Min"]]))
 env_rs_i = stack(env_rs_i)
+env_rs_i = env_rs[[c(1, 9, 12, 23, 30, 32)]]
 plot(env_rs_i, col = matlab.like(100))
 
 # ---- 6: Batch Run MaxEnt Models on all species ----
