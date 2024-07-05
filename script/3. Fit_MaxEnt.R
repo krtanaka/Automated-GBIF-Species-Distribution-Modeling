@@ -18,10 +18,10 @@ library(ggspatial)
 source("script/GBIF_SDM_Functions.R") # REPLACE W/ YOUR PATH TO GBIF_SDM_Functions.R
 
 species_list <- c(
-  "Unomia stolonifera"
-  # "Lutjanus gibbus",
+  "Unomia stolonifera",
+  "Lutjanus gibbus"
   # "Heniochus diphreutes",
-  # "Herklotsichthys quadrimaculatus",
+  # "Herklotsichthys quadrimaculatus"
   # "Acropora globiceps",
   # "Isopora crateriformis"
 )
@@ -37,10 +37,7 @@ env_rs_i = env_rs
 env_rs_i[["Bathymetry.Min"]][ env_rs_i[["Bathymetry.Min"]] <= -100] <- NA
 env_rs_i <- crop(env_rs_i, extent(floor(range(occ_df$Longitude)), floor(range(occ_df$Latitude))))
 env_rs_i = mask(rast(env_rs_i), rast(env_rs_i[["Bathymetry.Min"]]))
-env_rs_i = env_rs_i[[c(1, 6, 7, 9, 17, 23:26, 30, 32, 33)]]
 env_rs_i = stack(env_rs_i)
-env_rs_i = readAll(env_rs_i)
-save(env_rs_i, file = "data/env_rs_i.RData")
 plot(env_rs_i, col = matlab.like(100))
 
 # ---- 6: Batch Run MaxEnt Models on all species ----
