@@ -12,6 +12,7 @@ library(readr)
 library(colorRamps)
 library(ggmap)
 library(ggspatial)
+library(doParallel)
 
 # rm(list = ls())
 
