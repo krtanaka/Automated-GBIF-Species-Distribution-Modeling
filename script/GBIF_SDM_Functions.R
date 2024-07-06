@@ -44,6 +44,8 @@ gbif_occ_data = function(scientific_name, countries) {
 
 run_maxent = function(occ_sf, env) {
   
+  set.seed(2024)
+  
   # occ_sf = occ_df
   # env = env_rs
   # env = env_rs_i
@@ -60,7 +62,7 @@ run_maxent = function(occ_sf, env) {
   for(sp in species) {
     
     # sp = "Unomia stolonifera"
-    sp = species[1]
+    # sp = species[1]
     
     cat(paste("Processing", sp, "\n"))
     
@@ -71,11 +73,12 @@ run_maxent = function(occ_sf, env) {
     enmeval_results = ENMevaluate(occ_sp, env, 
                                   bg = NULL, 
                                   tune.args = list(fc = c("L","LQ","H", "LQH", "LQHP", "LQHPT"), rm = 1:5), 
-                                  partitions = "randomkfold", partition.settings = list(kfolds = 2), 
+                                  partitions = "randomkfold", 
+                                  partition.settings = list(kfolds = 2), 
                                   algorithm = "maxnet", 
                                   # n.bg = 100,
                                   parallel = T,
-                                  numCores = detectCores()-2,
+                                  numCores = detectCores()/2,
                                   updateProgress = T,
                                   taxon.name = sp)  # specify the taxon name here
     
