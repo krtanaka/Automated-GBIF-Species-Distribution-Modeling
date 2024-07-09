@@ -163,54 +163,47 @@ flexible_country_code = function(location_string) {
 
 # ---- Clip Prediction Raster by Species ----
 
-spp_clip_raster <- function(spp, worldbound, env_rs) {
-  
-  # Ensure the worldbound is in the same CRS as env_rs
-  worldbound <- st_transform(worldbound, crs = crs(env_rs))
-  
-  # Convert the string of country codes in spp dataframe to a list
-  spp <- spp %>%
-    mutate(country_list = str_split(countryCode, ";"))
-  
-  # Initialize an empty list to store the clipped rasters
-  clipped_rasters <- list()
-  
-  # Iterate over each unique Scientific.Name
-  for (sci_name in unique(spp$Scientific.Name)) {
-    # Extract the country codes associated with the current Scientific.Name
-    country_codes <- spp %>%
-      filter(Scientific.Name == sci_name) %>%
-      pull(country_list) %>%
-      unlist()
-    
-    # Subset the worldbound based on the country codes
-    subset_polygons <- worldbound %>%
-      filter(iso_3166_1_ %in% country_codes)
-    
-    # Union the subsetted polygons to get a single polygon in an sf object
-    combined_polygon <- st_union(subset_polygons) %>%
-      st_sf()
-    
-    # Clip the env_rs raster stack using the combined polygon
-    clipped_raster <- mask(env_rs, combined_polygon)
-    
-    # Store the clipped raster in the list
-    clipped_rasters[[sci_name]] <- clipped_raster
-  }
-  
-  return(clipped_rasters)
-}
+# spp_clip_raster <- function(spp, worldbound, env_rs) {
+#   
+#   # Ensure the worldbound is in the same CRS as env_rs
+#   worldbound <- st_transform(worldbound, crs = crs(env_rs))
+#   
+#   # Convert the string of country codes in spp dataframe to a list
+#   spp <- spp %>%
+#     mutate(country_list = str_split(countryCode, ";"))
+#   
+#   # Initialize an empty list to store the clipped rasters
+#   clipped_rasters <- list()
+#   
+#   # Iterate over each unique Scientific.Name
+#   for (sci_name in unique(spp$Scientific.Name)) {
+#     # Extract the country codes associated with the current Scientific.Name
+#     country_codes <- spp %>%
+#       filter(Scientific.Name == sci_name) %>%
+#       pull(country_list) %>%
+#       unlist()
+#     
+#     # Subset the worldbound based on the country codes
+#     subset_polygons <- worldbound %>%
+#       filter(iso_3166_1_ %in% country_codes)
+#     
+#     # Union the subsetted polygons to get a single polygon in an sf object
+#     combined_polygon <- st_union(subset_polygons) %>%
+#       st_sf()
+#     
+#     # Clip the env_rs raster stack using the combined polygon
+#     clipped_raster <- mask(env_rs, combined_polygon)
+#     
+#     # Store the clipped raster in the list
+#     clipped_rasters[[sci_name]] <- clipped_raster
+#   }
+#   
+#   return(clipped_rasters)
+# }
 
-spp_clip_raster_island <- function(spp, worldbound, env_rs, island) {
+spp_clip_raster <- function(spp, env_rs, island, depth_cutoff) {
   
   boxes = read_csv("data/Bounding_Boxes.csv")
-  
-  # Ensure the worldbound is in the same CRS as env_rs
-  worldbound <- st_transform(worldbound, crs = crs(env_rs))
-  
-  # # Convert the string of country codes in spp dataframe to a list
-  # spp <- spp %>%
-  #   mutate(country_list = str_split(countryCode, ";"))
   
   # Initialize an empty list to store the clipped rasters
   clipped_rasters <- list()
@@ -220,23 +213,16 @@ spp_clip_raster_island <- function(spp, worldbound, env_rs, island) {
     
     # island = "Oahu"
     
-    # Extract the country codes associated with the current Scientific.Name
-    island_box <- boxes %>%
-      filter(unit == island)
-    
-    # Subset the worldbound based on the country codes
-    subset_polygons <- worldbound %>%
-      filter(iso_3166_1_ %in% "USA")
-    
-    # Union the subsetted polygons to get a single polygon in an sf object
-    combined_polygon <- st_union(subset_polygons) %>%
-      st_sf()
+    island_box <- boxes %>% filter(unit == island)
     
     # Define the extent from island_boxes
-    extent_island <- extent(island_box$x_min, island_box$x_max, island_box$y_min, island_box$y_max)
+    extent_island <- extent(island_box$xmin, island_box$xmax, island_box$ymin, island_box$ymax)
     
     # Clip env_rs using the defined extent
     clipped_raster <- crop(env_rs, extent_island)
+    
+    clipped_raster[["Bathymetry.Min"]][ clipped_raster[["Bathymetry.Min"]] <= -depth_cutoff] <- NA
+    clipped_raster = mask(rast(clipped_raster), rast(clipped_raster[["Bathymetry.Min"]]))
     
     # Store the clipped raster in the list
     clipped_rasters[[sci_name]] <- clipped_raster

@@ -1,9 +1,11 @@
 library(terra)
 library(raster)
 
+rm(list = ls())
+
 bio_oracle_dir = file.path(fs::path_home(), "Desktop/data", "bio_oracle_v3") 
 bio_oracle_files = list.files(path = bio_oracle_dir, pattern = "\\.nc$", full.names = TRUE)
-bio_oracle_rs = raster::stack(bio_oracle_files)
+bio_oracle_rs = raster::stack(bio_oracle_files); names(bio_oracle_rs)
 
 anth_dir = file.path(fs::path_home(), "Desktop/data", "sedac_gfw") 
 anth_files = list.files(path = anth_dir, full.names = TRUE)[1:2]
@@ -33,4 +35,5 @@ close(pb)
 anth_rs <- stack(anth_rs)
 
 env_rs = stack(bio_oracle_rs, anth_rs)
-# save(readAll(env_rs), file = "data/env_rs.RData")
+env_rs = readAll(env_rs)
+save(env_rs, file = "data/env_rs.RData")
