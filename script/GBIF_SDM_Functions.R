@@ -54,9 +54,9 @@ run_maxent = function(occ_sf, env) {
   print(unique(occ_sf$Scientific.Name))
   species = unique(occ_sf$Scientific.Name)
   
-  # Initialize lists to store results
-  enm_results = list()
-  maxent_models = list()
+  # # Initialize lists to store results
+  # enm_results = list()
+  # maxent_models = list()
   
   # Loop through each species
   for(sp in species) {
@@ -103,10 +103,12 @@ run_maxent = function(occ_sf, env) {
     
     # Store maxent model
     maxent_models[[sp]] = sp_maxent_model
+    maxent_result = list(enm = enmeval_df, model = sp_maxent_model)
+    save(maxent_result, file = paste0("maxent_result_", sp, ".rda"))
     
   }
   
-  return(list(enm = enm_results, models = maxent_models))
+  # return(list(enm = enm_results, models = maxent_models))
 }
 
 # ---- Replace General Regions w/ List of Countries ----
