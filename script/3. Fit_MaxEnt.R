@@ -34,8 +34,8 @@ occ_df = read_csv("data/occurances_multi.csv") %>%
 # Check how many occurrences subset for each spp.
 table(occ_df$Scientific.Name)
 
-load("/mnt/ldrive/ktanaka/env_rs_i.RData")
-load("/mnt/ldrive/ktanaka/env_rs.RData")
+# load("/mnt/ldrive/ktanaka/env_rs_i.RData")
+# load("/mnt/ldrive/ktanaka/env_rs.RData")
 
 env_rs_i = env_rs
 env_rs_i[["Bathymetry.Min"]][ env_rs_i[["Bathymetry.Min"]] <= -1000] <- NA

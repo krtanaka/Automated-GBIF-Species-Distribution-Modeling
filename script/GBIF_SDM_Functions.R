@@ -5,21 +5,15 @@ run_maxent = function(occ_sf, env) {
   set.seed(2024)
   
   # occ_sf = occ_df
-  # env = env_rs
   # env = env_rs_i
   
   # Get unique Scientific Names
   print(unique(occ_sf$Scientific.Name))
   species = unique(occ_sf$Scientific.Name)
   
-  # # Initialize lists to store results
-  # enm_results = list()
-  # maxent_models = list()
-  
   # Loop through each species
   for(sp in species) {
     
-    # sp = "Unomia stolonifera"
     # sp = species[1]
     
     cat(paste("Processing", sp, "\n"))
@@ -34,16 +28,13 @@ run_maxent = function(occ_sf, env) {
                                   partitions = "randomkfold", 
                                   partition.settings = list(kfolds = 2), 
                                   algorithm = "maxnet", 
-                                  n.bg = 100,
+                                  # n.bg = 100,
                                   parallel = T,
                                   numCores = detectCores()/2,
                                   updateProgress = T,
                                   taxon.name = sp)  # specify the taxon name here
     
     enmeval_df = enmeval_results@results
-    
-    # Store ENMevaluate results
-    # enm_results[[sp]] = enmeval_df
     
     # Subset the ENMeval results to get the best model
     enmeval_bestm = subset(enmeval_df, delta.AICc == 0)
@@ -60,7 +51,6 @@ run_maxent = function(occ_sf, env) {
     sp_maxent_model = dismo::maxent(env, as.matrix(occ_sp), features = maxent_feats, betamultiplier = maxent_rm)
     
     # Store maxent model
-    # maxent_models[[sp]] = sp_maxent_model
     maxent_result = list(enm = enmeval_df, model = sp_maxent_model)
     save(maxent_result, file = paste0("output/maxent_result_", sp, ".rda"))
     

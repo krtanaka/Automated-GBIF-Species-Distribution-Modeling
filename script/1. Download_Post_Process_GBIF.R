@@ -68,7 +68,8 @@ for (s in 1:length(species_list)) {
                   Latitude  = decimallatitude,
                   Country = countrycode) %>%
     dplyr::select(Scientific.Name, Longitude, Latitude, Country) %>%
-    na.omit()
+    na.omit() %>% 
+    distinct()
   
   # df %>% 
   #   mutate(Longitude = ifelse(Longitude < 0, Longitude + 360, Longitude)) %>% 
