@@ -36,4 +36,4 @@ anth_rs <- stack(anth_rs)
 
 env_rs = stack(bio_oracle_rs, anth_rs)
 # env_rs = readAll(env_rs)
-# save(env_rs, file = "data/env_rs.RData")
+# save(env_rs, file = "/Users/kisei.tanaka/Desktop/env_rs.RData")

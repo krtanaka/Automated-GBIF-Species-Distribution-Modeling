@@ -39,10 +39,13 @@ table(occ_df$Scientific.Name)
 
 env_rs_i = env_rs
 env_rs_i[["Bathymetry.Min"]][ env_rs_i[["Bathymetry.Min"]] <= -1000] <- NA
-env_rs_i <- crop(env_rs_i, extent(range(occ_df$Longitude) + c(-1, 1), range(occ_df$Latitude) + c(-1, 1)))
+# env_rs_i <- crop(env_rs_i, extent(range(occ_df$Longitude) + c(-5, 5), range(occ_df$Latitude) + c(-5, 5)))
 env_rs_i = mask(rast(env_rs_i), rast(env_rs_i[["Bathymetry.Min"]]))
 env_rs_i = stack(env_rs_i)
-plot(env_rs_i[[3]], col = matlab.like(100))
+plot(env_rs_i[["Average.OceanTemperature"]], col = matlab.like(100))
+
+env_rs_i = readAll(env_rs_i)
+save(env_rs_i, file = "/Users/kisei.tanaka/Desktop/env_rs_i.RData")
 
 # Batch Run MaxEnt Models on all species
 maxent_results = run_maxent(occ_df, env_rs_i)

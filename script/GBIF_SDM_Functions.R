@@ -6,6 +6,7 @@ run_maxent = function(occ_sf, env) {
   
   # occ_sf = occ_df
   # env = env_rs_i
+  # env = env_rs
   
   # Get unique Scientific Names
   print(unique(occ_sf$Scientific.Name))
@@ -14,7 +15,7 @@ run_maxent = function(occ_sf, env) {
   # Loop through each species
   for(sp in species) {
     
-    # sp = species[1]
+    # sp = species[5]
     
     cat(paste("Processing", sp, "\n"))
     
@@ -32,7 +33,7 @@ run_maxent = function(occ_sf, env) {
                                   parallel = T,
                                   numCores = detectCores()/2,
                                   updateProgress = T,
-                                  taxon.name = sp)  # specify the taxon name here
+                                  taxon.name = sp) # specify the taxon name here
     
     enmeval_df = enmeval_results@results
     
