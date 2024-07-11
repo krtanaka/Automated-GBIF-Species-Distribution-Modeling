@@ -24,11 +24,12 @@ occ_df = read_csv("data/occurances_multi.csv") %>%
   as.data.frame()
 
 load("output/maxent_result_Herklotsichthys quadrimaculatus.rda")
+load("output/maxent_result_Heniochus diphreutes.rda")
 load("output/maxent_result_Unomia stolonifera.rda")
 
 plot(maxent_result$model)
 
-clipped_rasters <- spp_clip_raster(occ_df, env_rs, "Oahu", 1000)#; plot(clipped_rasters[[1]])
+clipped_rasters <- spp_clip_raster(occ_df, env_rs, "MHI", 5000)#; plot(clipped_rasters[[1]])
 # env_rs <- terra::resample(rast(env_rs), rast(bathy))
 
 r <- predict(maxent_result$model, clipped_rasters[[1]])
@@ -47,11 +48,11 @@ mean_lon <- mean(coords[, 1], na.rm = TRUE)
 
 map = ggmap::get_map(location = c(mean_lon, mean_lat),
                      maptype = "satellite",
-                     # zoom = 7,
+                     zoom = 7,
                      force = T)
 ggmap(map) +
   geom_spatial_point(data = r, aes(x, y, fill = maxent, color = maxent), 
-                     size = 10,
+                     # size = 10,
                      shape = 22, alpha = 0.8, crs = 4326) + 
   scale_fill_gradientn(colors = matlab.like(100), "Predicted \nOccupancy \n(0-1)") + 
   scale_color_gradientn(colors = matlab.like(100), "Predicted \nOccupancy \n(0-1)") + 

@@ -85,7 +85,7 @@ run_maxent = function(occ_sf, env) {
     enmeval_df = enmeval_results@results
     
     # Store ENMevaluate results
-    enm_results[[sp]] = enmeval_df
+    # enm_results[[sp]] = enmeval_df
     
     # Subset the ENMeval results to get the best model
     enmeval_bestm = subset(enmeval_df, delta.AICc == 0)
@@ -102,9 +102,9 @@ run_maxent = function(occ_sf, env) {
     sp_maxent_model = dismo::maxent(env, as.matrix(occ_sp), features = maxent_feats, betamultiplier = maxent_rm)
     
     # Store maxent model
-    maxent_models[[sp]] = sp_maxent_model
+    # maxent_models[[sp]] = sp_maxent_model
     maxent_result = list(enm = enmeval_df, model = sp_maxent_model)
-    save(maxent_result, file = paste0("maxent_result_", sp, ".rda"))
+    save(maxent_result, file = paste0("output/maxent_result_", sp, ".rda"))
     
   }
   
