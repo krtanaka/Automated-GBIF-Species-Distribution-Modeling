@@ -25,14 +25,15 @@ occ_df = read_csv("data/occurances_multi.csv") %>%
 
 load("output/maxent_result_Herklotsichthys quadrimaculatus.rda")
 load("output/maxent_result_Heniochus diphreutes.rda")
+load("output/maxent_result_Isopora crateriformis.rda")
 load("output/maxent_result_Unomia stolonifera.rda")
 
 plot(maxent_result$model)
 
-clipped_rasters <- spp_clip_raster(occ_df, env_rs, "MHI", 5000)#; plot(clipped_rasters[[1]])
+clipped_rasters <- spp_clip_raster(occ_df, env_rs, "SAMOA", 5000)#; plot(clipped_rasters[[1]])
 # env_rs <- terra::resample(rast(env_rs), rast(bathy))
 
-r <- predict(maxent_result$model, clipped_rasters[[1]])
+r <- predict(maxent_result$model, clipped_rasters)
 plot(r, col = matlab.like(100))
 r = rasterToPoints(raster(r)) %>% as.data.frame()
 
@@ -40,7 +41,7 @@ r = rasterToPoints(raster(r)) %>% as.data.frame()
 ggmap::register_google("AIzaSyDpirvA5gB7bmbEbwB1Pk__6jiV4SXAEcY")
 
 # Get the coordinates of the cell centers
-coords <- coordinates(clipped_rasters[[1]] %>% stack())
+coords <- coordinates(clipped_raster %>% stack())
 
 # Calculate the mean latitude and longitude
 mean_lat <- mean(coords[, 2], na.rm = TRUE)

@@ -2,11 +2,12 @@ require(tidyverse)
 require(rgbif)
 require(sf)
 require(raster)
-# require(geodata)
+require(geodata)
 require(ENMeval)
 require(ecospat)
 require(rJava)
 require(dismo)
+require(countrycode)
 library(readr)
 library(colorRamps)
 library(ggmap)
@@ -18,12 +19,12 @@ library(doParallel)
 source("script/GBIF_SDM_Functions.R")
 
 species_list <- c(
-  # "Unomia stolonifera",
-  "Lutjanus gibbus"
-  # "Heniochus diphreutes",
-  # "Herklotsichthys quadrimaculatus"
-  # "Acropora globiceps",
-  # "Isopora crateriformis"
+  "Unomia stolonifera",
+  "Lutjanus gibbus",
+  "Heniochus diphreutes",
+  "Herklotsichthys quadrimaculatus",
+  "Acropora globiceps",
+  "Isopora crateriformis"
 )
 
 occ_df = read_csv("data/occurances_multi.csv") %>% 

@@ -24,7 +24,7 @@ pb <- txtProgressBar(min = 0, max = length(species_list), style = 3)
 
 for (s in 1:length(species_list)) {
   
-  # s = 5
+  # s = 2
   
   setTxtProgressBar(pb, s)
   
