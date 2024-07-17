@@ -64,7 +64,7 @@ run_maxent = function(occ_sf, env) {
 
 spp_clip_raster <- function(spp, env_rs, domain, depth_cutoff) {
   
-  domain <- "Tutuila"
+  # domain <- "Tutuila"
   
   box <- readr::read_csv("data/Bounding_Boxes.csv")
   
