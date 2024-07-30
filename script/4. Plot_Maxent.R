@@ -17,7 +17,7 @@ species_list <- c(
   "Herklotsichthys quadrimaculatus",
   "Acropora globiceps",
   "Isopora crateriformis"
-)
+)[1]
 
 occ_df = read_csv("data/occurances_multi.csv") %>% 
   filter(Scientific.Name %in% species_list) %>%
@@ -30,7 +30,7 @@ load("output/maxent_result_Unomia stolonifera.rda")
 
 plot(maxent_result$model)
 
-clipped_raster <- spp_clip_raster(occ_df, env_rs, "Tutuila", 500)#; plot(clipped_raster[[1]])
+clipped_raster <- spp_clip_raster(occ_df, env_rs, "Oahu", 500)#; plot(clipped_raster[[1]])
 # env_rs <- terra::resample(rast(env_rs), rast(bathy))
 
 r <- predict(maxent_result$model, clipped_raster)

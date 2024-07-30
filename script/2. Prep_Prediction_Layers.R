@@ -7,6 +7,11 @@ bio_oracle_dir = file.path(fs::path_home(), "Desktop/data", "bio_oracle_v3")
 bio_oracle_files = list.files(path = bio_oracle_dir, pattern = "\\.nc$", full.names = TRUE)
 bio_oracle_rs = raster::stack(bio_oracle_files); names(bio_oracle_rs)
 
+v = vifstep(terra::rast(bio_oracle_rs), th = 10, keep = c("Maximum.OceanTemperature", 
+                                                          "Minimum.OceanTemperature"))
+
+bio_oracle_rs = raster::subset(bio_oracle_rs, v@results$Variables); names(bio_oracle_rs)
+
 anth_dir = file.path(fs::path_home(), "Desktop/data", "sedac_gfw") 
 anth_files = list.files(path = anth_dir, full.names = TRUE)[1:2]
 anth_rs <- list()
@@ -37,3 +42,4 @@ anth_rs <- stack(anth_rs)
 env_rs = stack(bio_oracle_rs, anth_rs)
 # env_rs = readAll(env_rs)
 # save(env_rs, file = "/Users/kisei.tanaka/Desktop/env_rs.RData")
+
