@@ -17,7 +17,7 @@ species_list <- c(
   "Herklotsichthys quadrimaculatus",
   "Acropora globiceps",
   "Isopora crateriformis"
-)[1]
+)[2]
 
 occ_df = read_csv("data/occurances_multi.csv") %>% 
   filter(Scientific.Name %in% species_list) %>%
@@ -27,6 +27,7 @@ load("output/maxent_result_Herklotsichthys quadrimaculatus.rda")
 load("output/maxent_result_Heniochus diphreutes.rda")
 load("output/maxent_result_Isopora crateriformis.rda")
 load("output/maxent_result_Unomia stolonifera.rda")
+load("output/maxent_result_Lutjanus gibbus.rda")
 
 plot(maxent_result$model)
 

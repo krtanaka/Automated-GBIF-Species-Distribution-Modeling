@@ -1,5 +1,6 @@
 library(terra)
 library(raster)
+library(usdm)
 
 rm(list = ls())
 
@@ -7,8 +8,10 @@ bio_oracle_dir = file.path(fs::path_home(), "Desktop/data", "bio_oracle_v3")
 bio_oracle_files = list.files(path = bio_oracle_dir, pattern = "\\.nc$", full.names = TRUE)
 bio_oracle_rs = raster::stack(bio_oracle_files); names(bio_oracle_rs)
 
-v = vifstep(terra::rast(bio_oracle_rs), th = 10, keep = c("Maximum.OceanTemperature", 
-                                                          "Minimum.OceanTemperature"))
+v = vifstep(terra::rast(bio_oracle_rs), th = 10
+            # , keep = c("Maximum.OceanTemperature", 
+            #            "Minimum.OceanTemperature")
+)
 
 bio_oracle_rs = raster::subset(bio_oracle_rs, v@results$Variables); names(bio_oracle_rs)
 

@@ -25,7 +25,7 @@ species_list <- c(
   "Herklotsichthys quadrimaculatus",
   "Acropora globiceps",
   "Isopora crateriformis"
-)[1]
+)[2]
 
 occ_df = read_csv("data/occurances_multi.csv") %>% 
   filter(Scientific.Name %in% species_list) %>%
@@ -38,8 +38,8 @@ table(occ_df$Scientific.Name)
 # load("/mnt/ldrive/ktanaka/env_rs.RData")
 
 env_rs_i = env_rs
-env_rs_i[["Bathymetry.Min"]][ env_rs_i[["Bathymetry.Min"]] <= -1000] <- NA
-env_rs_i <- crop(env_rs_i, extent(range(occ_df$Longitude) + c(-5, 5), range(occ_df$Latitude) + c(-5, 5)))
+env_rs_i[["Bathymetry.Min"]][ env_rs_i[["Bathymetry.Min"]] <= -100] <- NA
+# env_rs_i <- crop(env_rs_i, extent(range(occ_df$Longitude) + c(-5, 5), range(occ_df$Latitude) + c(-5, 5)))
 env_rs_i = mask(rast(env_rs_i), rast(env_rs_i[["Bathymetry.Min"]]))
 env_rs_i = stack(env_rs_i)
 plot(env_rs_i[["Maximum.pH"]], col = matlab.like(100))
