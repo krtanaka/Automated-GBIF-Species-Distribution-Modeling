@@ -17,7 +17,7 @@ species_list <- c(
   "Herklotsichthys quadrimaculatus",
   "Acropora globiceps",
   "Isopora crateriformis"
-)[2]
+)[1]
 
 occ_df = read_csv("data/occurances_multi.csv") %>% 
   filter(Scientific.Name %in% species_list) %>%

@@ -10,8 +10,8 @@ bio_oracle_rs = raster::stack(bio_oracle_files); names(bio_oracle_rs)
 
 v = vifstep(terra::rast(bio_oracle_rs), th = 10
             , keep = c(
-              "Maximum.OceanTemperature",
-              "Minimum.OceanTemperature",
+              # "Maximum.OceanTemperature",
+              # "Minimum.OceanTemperature",
               "Bathymetry.Min")
 )
 
