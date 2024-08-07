@@ -12,11 +12,18 @@ library(ggplot2)
 rm(list = ls())
 
 species_list <- c("Unomia stolonifera", 
+                  "Balistapus undulatus",
                   "Lutjanus gibbus",
+                  "Cephalopholis argus",
+                  "Lutjanus kasmira",
+                  "Lutjanus fulvus",
+                  "Apolemichthys xanthopunctatus",
+                  "Centropyge flavissima",
+                  "Pomacanthus semicirculatus",
                   "Heniochus diphreutes",
-                  "Herklotsichthys quadrimaculatus",
-                  "Acropora globiceps",
-                  "Isopora crateriformis")
+                  "Herklotsichthys quadrimaculatus")
+                  # "Acropora globiceps",
+                  # "Isopora crateriformis")
 
 occ_df = NULL
 
